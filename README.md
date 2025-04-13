@@ -15,7 +15,7 @@ Un sistema completo de autenticación desarrollado con React, Node.js y PostgreS
 ## Requisitos previos
 
 - Node.js v18.x o superior
-- PostgreSQL 13.x o superior
+- MySQL 8.0 o superior
 - npm v8.x o superior
 
 ## Instalación
@@ -38,7 +38,7 @@ npm install
 Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```
-DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/nombre_bd
+DATABASE_URL=mysql://usuario:contraseña@localhost:3306/nombre_bd
 JWT_SECRET=tu_clave_secreta_para_jwt
 ```
 
@@ -114,13 +114,13 @@ docker run -p 5000:5000 -e DATABASE_URL=tu_url_de_bd -e JWT_SECRET=tu_secreto si
 
 ## Docker Compose
 
-También puedes utilizar Docker Compose para ejecutar la aplicación junto con PostgreSQL:
+También puedes utilizar Docker Compose para ejecutar la aplicación junto con MySQL:
 
 ```bash
 docker-compose up -d
 ```
 
-Esto iniciará tanto la aplicación como una base de datos PostgreSQL.
+Esto iniciará tanto la aplicación como una base de datos MySQL.
 
 ## Estructura del proyecto
 
@@ -145,7 +145,7 @@ Esto iniciará tanto la aplicación como una base de datos PostgreSQL.
 
 - **Frontend**: React, Tailwind CSS, shadcn/ui, Zustand
 - **Backend**: Node.js, Express
-- **Base de datos**: PostgreSQL
+- **Base de datos**: MySQL
 - **ORM**: Drizzle ORM
 - **Autenticación**: JWT
 - **Testing**: Jest, React Testing Library

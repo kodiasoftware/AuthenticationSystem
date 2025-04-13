@@ -24,7 +24,7 @@ Este documento registra todos los cambios significativos realizados en el proyec
 ## [Versión 1.1.0] - 2025-04-13
 
 ### Añadido
-- Integración con base de datos PostgreSQL para almacenamiento persistente
+- Integración con base de datos MySQL para almacenamiento persistente
 - Implementación de Drizzle ORM para interacción con la base de datos
 - Creación de migraciones para la estructura de tablas
 - Implementación de hash de contraseñas con bcrypt para mayor seguridad
