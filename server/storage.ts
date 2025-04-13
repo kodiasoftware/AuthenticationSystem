@@ -1,9 +1,10 @@
-import { users, type User, type InsertUser } from "@shared/schema";
+import { type User, type InsertUser } from "@shared/schema";
 import bcrypt from "bcrypt";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import * as schema from "@shared/schema";
 
-// modify the interface with any CRUD methods
-// you might need
-
+// Interfaz para las operaciones de almacenamiento
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -11,70 +12,63 @@ export interface IStorage {
   validateUserCredentials(email: string, password: string): Promise<User | null>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  currentId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.currentId = 1;
-    
-    // Initialize with a test user for development
-    this.createUser({
-      name: "Usuario Demo",
-      email: "demo@example.com",
-      password: "password123"
-    });
-  }
-
+// Implementación de almacenamiento usando base de datos PostgreSQL
+export class DatabaseStorage implements IStorage {
+  
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email.toLowerCase(),
-    );
+    const normalizedEmail = email.toLowerCase();
+    const result = await db.select().from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Verificar si el usuario ya existe
     const existingUser = await this.getUserByEmail(insertUser.email);
     if (existingUser) {
       throw new Error("El usuario con este correo ya existe");
     }
 
-    const id = this.currentId++;
-    
-    // Hash the password before storing
+    // Hash la contraseña antes de almacenarla
     const hashedPassword = await bcrypt.hash(insertUser.password, 10);
     
-    const user: User = { 
+    // Preparar los datos del usuario con el email normalizado
+    const userData = { 
       ...insertUser, 
-      id,
       email: insertUser.email.toLowerCase(),
       password: hashedPassword 
     };
     
-    this.users.set(id, user);
-    return { ...user, password: "[PROTECTED]" } as User;
+    // Insertar el usuario en la base de datos
+    const [newUser] = await db.insert(schema.users).values(userData).returning();
+    
+    // Devolver el usuario sin exponer la contraseña
+    return { ...newUser, password: "[PROTECTED]" } as User;
   }
 
   async validateUserCredentials(email: string, password: string): Promise<User | null> {
+    // Buscar al usuario por email
     const user = await this.getUserByEmail(email);
     
     if (!user) {
       return null;
     }
 
+    // Verificar la contraseña
     const isPasswordValid = await bcrypt.compare(password, user.password);
     
     if (!isPasswordValid) {
       return null;
     }
 
-    // Return user without password
+    // Devolver el usuario sin exponer la contraseña
     return { ...user, password: "[PROTECTED]" } as User;
   }
 }
 
-export const storage = new MemStorage();
+// Exportar la instancia de almacenamiento para ser utilizada en la aplicación
+export const storage = new DatabaseStorage();
