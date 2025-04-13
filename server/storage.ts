@@ -12,7 +12,7 @@ export interface IStorage {
   validateUserCredentials(email: string, password: string): Promise<User | null>;
 }
 
-// Implementación de almacenamiento usando base de datos PostgreSQL
+// Implementación de almacenamiento usando base de datos MySQL
 export class DatabaseStorage implements IStorage {
   
   async getUser(id: number): Promise<User | undefined> {
@@ -43,11 +43,17 @@ export class DatabaseStorage implements IStorage {
       password: hashedPassword 
     };
     
-    // Insertar el usuario en la base de datos
-    const [newUser] = await db.insert(schema.users).values(userData).returning();
+    // Insertar el usuario en la base de datos y obtener la inserción ID
+    await db.insert(schema.users).values(userData);
     
-    // Devolver el usuario sin exponer la contraseña
-    return { ...newUser, password: "[PROTECTED]" } as User;
+    // En MySQL, recuperamos el usuario usando el correo electrónico después de insertarlo
+    const newUser = await this.getUserByEmail(userData.email);
+    if (newUser) {
+      // Devolver el usuario sin exponer la contraseña
+      return { ...newUser, password: "[PROTECTED]" } as User;
+    }
+    
+    throw new Error("Error al crear el usuario");
   }
 
   async validateUserCredentials(email: string, password: string): Promise<User | null> {

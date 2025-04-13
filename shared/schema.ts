@@ -1,12 +1,12 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { mysqlTable, varchar, int, primaryKey } from "drizzle-orm/mysql-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+export const users = mysqlTable("users", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
